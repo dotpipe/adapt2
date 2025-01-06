@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Management Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        a {
+            text-decoration: none;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Store Management Dashboard</h1>
+        <div class="grid">
+            <a href="addproducts.html">
+                <div class="card">
+                    <div class="card-icon">➕</div>
+                    <div class="card-title">Add Products</div>
+                </div>
+            </a>
+            <a href="addstore.html">
+                <div class="card">
+                    <div class="card-icon">🏪</div>
+                    <div class="card-title">Add Store</div>
+                </div>
+            </a>
+            <a href="chat.html">
+                <div class="card">
+                    <div class="card-icon">💬</div>
+                    <div class="card-title">Customer Chat</div>
+                </div>
+            </a>
+            <a href="dashboard.html">
+                <div class="card">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">Analytics Dashboard</div>
+                </div>
+            </a>
+            <a href="events.html">
+                <div class="card">
+                    <div class="card-icon">🎉</div>
+                    <div class="card-title">Events</div>
+                </div>
+            </a>
+            <a href="geocode.html">
+                <div class="card">
+                    <div class="card-icon">🗺️</div>
+                    <div class="card-title">Geocoding</div>
+                </div>
+            </a>
+            <a href="handler.html">
+                <div class="card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-title">Reviews & Feedback</div>
+                </div>
+            </a>
+            <a href="inventory.html">
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <div class="card-title">Inventory Management</div>
+                </div>
+            </a>
+            <a href="login.html">
+                <div class="card">
+                    <div class="card-icon">🔐</div>
+                    <div class="card-title">Login</div>
+                </div>
+            </a>
+            <a href="products.html">
+                <div class="card">
+                    <div class="card-icon">🛍️</div>
+                    <div class="card-title">Products</div>
+                </div>
+            </a>
+            <a href="registration.html">
+                <div class="card">
+                    <div class="card-icon">📝</div>
+                    <div class="card-title">Registration</div>
+                </div>
+            </a>
+            <a href="requests.html">
+                <div class="card">
+                    <div class="card-icon">📋</div>
+                    <div class="card-title">Customer Requests</div>
+                </div>
+            </a>
+            <a href="visitors.html">
+                <div class="card">
+                    <div class="card-icon">👥</div>
+                    <div class="card-title">Visitor Feedback</div>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>
