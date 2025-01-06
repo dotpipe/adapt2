@@ -5,7 +5,7 @@
  * This class generates a heatmap and dashboard for daily or weekly hourly feedback activity.
  * It outputs an HTML page optimized for mobile WebView.
  */
-require_once 'classes/Database.php';
+require_once './Database.php';
 
 $db = Database::getInstance()->getConnection();
 

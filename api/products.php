@@ -25,7 +25,7 @@
  * - size VARCHAR(255)
  * - weight VARCHAR(255)
  */
-require_once 'classes/Database.php';
+require_once './Database.php';
 
 $db = Database::getInstance()->getConnection();
 

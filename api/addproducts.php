@@ -1,6 +1,6 @@
 <?php
 // Assuming you have autoload or manual inclusion of the Inventory class
-require_once 'classes/Database.php';
+require_once './Database.php';
 
 $db = Database::getInstance()->getConnection();
 
