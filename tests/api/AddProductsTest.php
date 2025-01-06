@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-require_once __DIR__ . '/../../api/addproducts.php';
+require_once __DIR__ . '/../.../api/addproducts.php';
 
 class AddProductsTest extends TestCase
 {
@@ -15,7 +15,7 @@ class AddProductsTest extends TestCase
 
         // Capture output
         ob_start();
-        include __DIR__ . '/../../api/addproducts.php';
+        include __DIR__ . '/../.../api/addproducts.php';
         $output = ob_get_clean();
 
         // Assert response
@@ -32,7 +32,7 @@ class AddProductsTest extends TestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
 
         ob_start();
-        include __DIR__ . '/../../api/addproducts.php';
+        include __DIR__ . '/../.../api/addproducts.php';
         $output = ob_get_clean();
 
         $this->assertJson($output);
@@ -47,7 +47,7 @@ class AddProductsTest extends TestCase
         $_POST = [];
 
         ob_start();
-        include __DIR__ . '/../../api/addproducts.php';
+        include __DIR__ . '/../.../api/addproducts.php';
         $output = ob_get_clean();
 
         $this->assertJson($output);
@@ -64,7 +64,7 @@ class AddProductsTest extends TestCase
         $_POST['product_description'] = 'This is a test product';
 
         ob_start();
-        include __DIR__ . '/../../api/addproducts.php';
+        include __DIR__ . '/../.../api/addproducts.php';
         $output = ob_get_clean();
 
         $this->assertJson($output);

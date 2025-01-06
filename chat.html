@@ -41,7 +41,7 @@
             const storeZipcode = '12345'; // Example zipcode
             const storeType = 'Electronics'; // Example store type
 
-            fetch('/api/chat.php?action=start_chat', {
+            fetch('./api/chat.php?action=start_chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ visitor_id: visitorId, store_zipcode: storeZipcode, store_type: storeType })
@@ -57,7 +57,7 @@
         function sendMessage() {
             const message = messageInput.value.trim();
             if (message && chatId) {
-                fetch('/api/chat.php?action=send_message', {
+                fetch('./api/chat.php?action=send_message', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: chatId, user: 'visitor', message: message, cussing_mode: false })
@@ -77,7 +77,7 @@
             if (chatId) {
                 const holdMessage = 'Please hold while we transfer you to a specialist.';
                 const internalMessage = 'Customer put on hold for transfer.';
-                fetch('/api/chat.php?action=put_on_hold', {
+                fetch('./api/chat.php?action=put_on_hold', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: chatId, hold_message: holdMessage, internal_message: internalMessage })
@@ -97,7 +97,7 @@
             if (chatId) {
                 const newStoreZipcode = '54321'; // Example new zipcode
                 const newStoreType = 'Customer Service'; // Example new store type
-                fetch('/api/chat.php?action=forward_visitor', {
+                fetch('./api/chat.php?action=forward_visitor', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ chat_id: chatId, new_store_zipcode: newStoreZipcode, new_store_type: newStoreType })

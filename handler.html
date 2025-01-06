@@ -81,7 +81,7 @@
         });
 
         function submitReview(data) {
-            fetch('/api/handler.php', {
+            fetch('./api/handler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'addProductReview', ...data })
@@ -95,7 +95,7 @@
         }
 
         function submitFeedback(data) {
-            fetch('/api/handler.php', {
+            fetch('./api/handler.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'addProductFeedback', ...data })
@@ -110,7 +110,7 @@
 
         function getProductReviews() {
             const productId = document.getElementById('viewProductId').value;
-            fetch(`/api/handler.php?action=getProductReviews&productId=${productId}`)
+            fetch(`./api/handler.php?action=getProductReviews&productId=${productId}`)
             .then(response => response.json())
             .then(reviews => {
                 const reviewsList = document.getElementById('reviewsList');
@@ -127,7 +127,7 @@
 
         function evaluateRecipe() {
             const recipeId = document.getElementById('evaluateRecipeId').value;
-            fetch(`/api/handler.php?action=evaluateRecipe&recipeId=${recipeId}`)
+            fetch(`./api/handler.php?action=evaluateRecipe&recipeId=${recipeId}`)
             .then(response => response.json())
             .then(result => {
                 document.getElementById('recipeFeedback').innerHTML = `

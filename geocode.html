@@ -30,7 +30,7 @@
                 return;
             }
 
-            fetch(`/api/geocode.php?address=${encodeURIComponent(address)}`)
+            fetch(`./api/geocode.php?address=${encodeURIComponent(address)}`)
                 .then(response => response.json())
                 .then(data => {
                     const resultDiv = document.getElementById('result');

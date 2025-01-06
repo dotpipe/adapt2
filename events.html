@@ -39,7 +39,7 @@
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
 
-            fetch(`/api/events.php?eventType=${eventType}&startDate=${startDate}&endDate=${endDate}`)
+            fetch(`./api/events.php?eventType=${eventType}&startDate=${startDate}&endDate=${endDate}`)
                 .then(response => response.json())
                 .then(data => {
                     const resultsDiv = document.getElementById('results');

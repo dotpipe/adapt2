@@ -5,6 +5,11 @@
  * This class generates a heatmap and dashboard for daily or weekly hourly feedback activity.
  * It outputs an HTML page optimized for mobile WebView.
  */
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
 
 class AnalyticsDashboard
 {

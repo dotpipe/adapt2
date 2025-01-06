@@ -1,5 +1,10 @@
 <?php
 // Assuming you have autoload or manual inclusion of the Inventory class
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
 
 // Set content type to JSON for the response
 header('Content-Type: application/json');

@@ -1,4 +1,11 @@
 <?php
+
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
+
 class ChatAPI {
     private $chatData = [];
 

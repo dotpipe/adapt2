@@ -1,4 +1,9 @@
 <?php
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
 
 class Geocode
 {
@@ -7,7 +12,7 @@ class Geocode
     public static function getCoordinates($address)
     {
         // Google Maps Geocoding API URL
-        $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&key=' . self::GOOGLE_MAPS_API_KEY;
+        $url = 'https://maps.googleapis.com/maps./api/geocode/json?address=' . urlencode($address) . '&key=' . self::GOOGLE_MAPS_API_KEY;
 
         // Send the GET request
         $response = file_get_contents($url);

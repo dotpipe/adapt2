@@ -68,7 +68,7 @@
                 hour: new Date().getHours() // Current hour
             };
 
-            fetch('/api/visitors.php', {
+            fetch('./api/visitors.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(feedbackData)
@@ -85,7 +85,7 @@
             const storeId = document.getElementById('viewStoreId').value;
             if (!storeId) return;
 
-            fetch(`/api/visitors.php?store_id=${storeId}`)
+            fetch(`./api/visitors.php?store_id=${storeId}`)
             .then(response => response.json())
             .then(data => displayFeedback(data))
             .catch(error => console.error('Error:', error));

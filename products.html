@@ -60,7 +60,7 @@
                 weight: document.getElementById('weight').value
             };
 
-            fetch('/api/products.php', {
+            fetch('./api/products.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(productData)
@@ -81,7 +81,7 @@
                 weight: document.getElementById('searchWeight').value
             });
 
-            fetch(`/api/products.php?${searchParams}`)
+            fetch(`./api/products.php?${searchParams}`)
             .then(response => response.json())
             .then(data => displaySearchResults(data))
             .catch(error => console.error('Error:', error));

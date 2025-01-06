@@ -15,6 +15,11 @@
  * - status (VARCHAR)
  * - created_at (TIMESTAMP)
  */
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
 
 class Requests
 {

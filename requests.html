@@ -52,7 +52,7 @@
                 status: document.getElementById('status').value
             };
 
-            fetch('/api/requests.php', {
+            fetch('./api/requests.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestData)
@@ -67,7 +67,7 @@
         }
 
         function getAllRequests() {
-            fetch('/api/requests.php')
+            fetch('./api/requests.php')
             .then(response => response.json())
             .then(data => displayRequests(data))
             .catch(error => console.error('Error:', error));
@@ -119,7 +119,7 @@
 
         function deleteRequest(id) {
             if (confirm('Are you sure you want to delete this request?')) {
-                fetch(`/api/requests.php`, {
+                fetch(`./api/requests.php`, {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: id })

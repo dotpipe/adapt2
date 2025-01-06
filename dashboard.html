@@ -46,7 +46,7 @@
         }
 
         function generateHeatmap(storeId) {
-            fetch(`/api/dashboard.php?store_id=${storeId}`)
+            fetch(`./api/dashboard.php?store_id=${storeId}`)
                 .then(response => response.text())
                 .then(html => {
                     document.getElementById('heatmapContainer').innerHTML = html;

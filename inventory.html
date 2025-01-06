@@ -54,7 +54,7 @@
                 keywords: document.getElementById('keywords').value.split(',').map(k => k.trim())
             };
 
-            fetch('/api/inventory.php', {
+            fetch('./api/inventory.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(productData)
@@ -71,7 +71,7 @@
             const searchTerm = document.getElementById('searchTerm').value;
             const storeId = document.getElementById('searchStoreId').value;
 
-            fetch(`/api/inventory.php?search=${searchTerm}&store_id=${storeId}`)
+            fetch(`./api/inventory.php?search=${searchTerm}&store_id=${storeId}`)
             .then(response => response.json())
             .then(data => displayInventory(data))
             .catch(error => console.error('Error:', error));
@@ -121,7 +121,7 @@
 
         function removeProduct(productId) {
             if (confirm('Are you sure you want to remove this product?')) {
-                fetch(`/api/inventory.php?remove=${productId}`, { method: 'DELETE' })
+                fetch(`./api/inventory.php?remove=${productId}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     alert('Product removed successfully!');

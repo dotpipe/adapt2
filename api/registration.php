@@ -1,10 +1,15 @@
 <?php
+require_once 'classes/Database.php';
+
+$db = Database::getInstance()->getConnection();
+
+// Now you can use $db for database operations
 
 class Registration {
     private $db;
 
     public function __construct($dbConnection) {
-        $this->db = $dbConnection;
+        $this->db = $db;
     }
 
     public function register($username, $password) {
