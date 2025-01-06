@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Popular Items</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        form { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #results { border: 1px solid #ddd; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Event Popular Items</h1>
+    <form id="eventForm">
+        <select id="eventType" required>
+            <option value="">Select Event Type</option>
+            <option value="wedding">Wedding</option>
+            <option value="birthday">Birthday</option>
+            <option value="holiday">Holiday</option>
+            <!-- Add more event types as needed -->
+        </select>
+        <input type="date" id="startDate" required>
+        <input type="date" id="endDate" required>
+        <button type="submit">Get Popular Items</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('eventForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const eventType = document.getElementById('eventType').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            fetch(`/api/events.php?eventType=${eventType}&startDate=${startDate}&endDate=${endDate}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    if (data.length > 0) {
+                        let tableHtml = `
+                            <h2>Popular Items for ${eventType}</h2>
+                            <table>
+                                <tr>
+                                    <th>Item Name</th>
+                                    <th>Total Searches</th>
+                                </tr>
+                        `;
+                        data.forEach(item => {
+                            tableHtml += `
+                                <tr>
+                                    <td>${item.item_name}</td>
+                                    <td>${item.total_searches}</td>
+                                </tr>
+                            `;
+                        });
+                        tableHtml += '</table>';
+                        resultsDiv.innerHTML = tableHtml;
+                    } else {
+                        resultsDiv.innerHTML = '<p>No popular items found for this event and date range.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('results').innerHTML = '<p>An error occurred while fetching the data.</p>';
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Feedback Management</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Store Feedback Management</h1>
+
+    <div class="section">
+        <h2>Submit Feedback</h2>
+        <form id="feedbackForm">
+            <select id="storeId" required>
+                <option value="">Select Store</option>
+                <!-- Populate this dynamically with available stores -->
+            </select>
+            <textarea id="feedback" placeholder="Your feedback" required></textarea>
+            <input type="number" id="rating" min="1" max="5" placeholder="Rating (1-5)" required>
+            <button type="submit">Submit Feedback</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>View Store Feedback</h2>
+        <select id="viewStoreId" onchange="getFeedback()">
+            <option value="">Select Store</option>
+            <!-- Populate this dynamically with available stores -->
+        </select>
+        <div id="feedbackList"></div>
+    </div>
+
+    <script>
+        function populateStores() {
+            // This function should fetch stores from your API and populate the dropdowns
+            // For now, we'll add some dummy data
+            const stores = [
+                { id: 1, name: "Store A" },
+                { id: 2, name: "Store B" },
+                { id: 3, name: "Store C" }
+            ];
+            const storeSelects = document.querySelectorAll('#storeId, #viewStoreId');
+            storeSelects.forEach(select => {
+                stores.forEach(store => {
+                    const option = document.createElement('option');
+                    option.value = store.id;
+                    option.textContent = store.name;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function submitFeedback(event) {
+            event.preventDefault();
+            const feedbackData = {
+                store_id: document.getElementById('storeId').value,
+                feedback: document.getElementById('feedback').value,
+                rating: document.getElementById('rating').value,
+                hour: new Date().getHours() // Current hour
+            };
+
+            fetch('/api/visitors.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(feedbackData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Feedback submitted successfully!');
+                document.getElementById('feedbackForm').reset();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function getFeedback() {
+            const storeId = document.getElementById('viewStoreId').value;
+            if (!storeId) return;
+
+            fetch(`/api/visitors.php?store_id=${storeId}`)
+            .then(response => response.json())
+            .then(data => displayFeedback(data))
+            .catch(error => console.error('Error:', error));
+        }
+
+        function displayFeedback(feedback) {
+            const feedbackList = document.getElementById('feedbackList');
+            if (!feedback || feedback.length === 0) {
+                feedbackList.innerHTML = '<p>No feedback available for this store.</p>';
+                return;
+            }
+
+            let html = '<table><tr><th>Week Start</th><th>Feedback Count</th><th>Average Rating</th></tr>';
+            feedback.forEach(week => {
+                html += `<tr>
+                    <td>${week.week_start}</td>
+                    <td>${week.feedback_count}</td>
+                    <td>${week.average_rating.toFixed(2)}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            feedbackList.innerHTML = html;
+        }
+
+        document.getElementById('feedbackForm').addEventListener('submit', submitFeedback);
+        populateStores(); // Populate store dropdowns on page load
+    </script>
+</body>
+</html>

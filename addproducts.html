@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Products</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .product-form { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
+        input, select { width: 100%; padding: 5px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #addProductBtn { background-color: #008CBA; }
+        #message { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+    </style>
+</head>
+<body>
+    <h1>Add Products</h1>
+    <div id="productForms"></div>
+    <button id="addProductBtn">Add Another Product</button>
+    <button id="submitBtn">Submit Products</button>
+    <div id="message"></div>
+
+    <script>
+        let productCount = 0;
+
+        function addProductForm() {
+            productCount++;
+            const form = document.createElement('div');
+            form.className = 'product-form';
+            form.innerHTML = `
+                <h3>Product ${productCount}</h3>
+                <input type="text" placeholder="Product Name" required>
+                <input type="text" placeholder="Category" required>
+                <input type="number" placeholder="Price" step="0.01" required>
+                <input type="number" placeholder="Stock Quantity" required>
+                <input type="number" placeholder="Store ID" required>
+                <input type="text" placeholder="Keywords (comma-separated)">
+            `;
+            document.getElementById('productForms').appendChild(form);
+        }
+
+        function collectProductData() {
+            const products = [];
+            document.querySelectorAll('.product-form').forEach(form => {
+                const inputs = form.querySelectorAll('input');
+                products.push({
+                    product_name: inputs[0].value,
+                    category: inputs[1].value,
+                    price: parseFloat(inputs[2].value),
+                    stock_quantity: parseInt(inputs[3].value),
+                    store_id: parseInt(inputs[4].value),
+                    keywords: inputs[5].value.split(',').map(k => k.trim()).filter(k => k)
+                });
+            });
+            return products;
+        }
+
+        function displayMessage(text, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'error' : 'success';
+        }
+
+        document.getElementById('addProductBtn').addEventListener('click', addProductForm);
+
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            const products = collectProductData();
+            if (products.length === 0) {
+                displayMessage('Please add at least one product.', true);
+                return;
+            }
+
+            fetch('/api/addproducts.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ products: products }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayMessage(data.success);
+                    document.getElementById('productForms').innerHTML = '';
+                    productCount = 0;
+                } else {
+                    displayMessage(data.error, true);
+                }
+            })
+            .catch(error => {
+                displayMessage('An error occurred while submitting the products.', true);
+                console.error('Error:', error);
+            });
+        });
+
+        // Add the first product form on page load
+        addProductForm();
+    </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Reviews and Feedback</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .section { border: 1px solid #ddd; padding: 20px; margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #reviewsList, #recipeFeedback { margin-top: 20px; }
+        .review, .feedback-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Product Reviews and Feedback</h1>
+
+    <div class="section">
+        <h2>Add Product Review</h2>
+        <form id="reviewForm">
+            <input type="number" id="productId" placeholder="Product ID" required>
+            <input type="number" id="userId" placeholder="User ID" required>
+            <input type="number" id="rating" min="1" max="5" placeholder="Rating (1-5)" required>
+            <textarea id="reviewText" placeholder="Your review" required></textarea>
+            <button type="submit">Submit Review</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>Add Product Feedback for Recipe</h2>
+        <form id="feedbackForm">
+            <input type="number" id="recipeId" placeholder="Recipe ID" required>
+            <input type="number" id="feedbackProductId" placeholder="Product ID" required>
+            <input type="number" id="feedbackUserId" placeholder="User ID" required>
+            <select id="feedbackType" required>
+                <option value="suggest">Suggest</option>
+                <option value="avoid">Avoid</option>
+            </select>
+            <textarea id="reason" placeholder="Reason for suggestion/avoidance" required></textarea>
+            <button type="submit">Submit Feedback</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>View Product Reviews</h2>
+        <input type="number" id="viewProductId" placeholder="Enter Product ID">
+        <button onclick="getProductReviews()">Get Reviews</button>
+        <div id="reviewsList"></div>
+    </div>
+
+    <div class="section">
+        <h2>Evaluate Recipe</h2>
+        <input type="number" id="evaluateRecipeId" placeholder="Enter Recipe ID">
+        <button onclick="evaluateRecipe()">Evaluate Recipe</button>
+        <div id="recipeFeedback"></div>
+    </div>
+
+    <script>
+        document.getElementById('reviewForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const reviewData = {
+                productId: document.getElementById('productId').value,
+                userId: document.getElementById('userId').value,
+                rating: document.getElementById('rating').value,
+                reviewText: document.getElementById('reviewText').value
+            };
+            submitReview(reviewData);
+        });
+
+        document.getElementById('feedbackForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const feedbackData = {
+                recipeId: document.getElementById('recipeId').value,
+                productId: document.getElementById('feedbackProductId').value,
+                userId: document.getElementById('feedbackUserId').value,
+                feedbackType: document.getElementById('feedbackType').value,
+                reason: document.getElementById('reason').value
+            };
+            submitFeedback(feedbackData);
+        });
+
+        function submitReview(data) {
+            fetch('/api/handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'addProductReview', ...data })
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+                document.getElementById('reviewForm').reset();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function submitFeedback(data) {
+            fetch('/api/handler.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'addProductFeedback', ...data })
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+                document.getElementById('feedbackForm').reset();
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function getProductReviews() {
+            const productId = document.getElementById('viewProductId').value;
+            fetch(`/api/handler.php?action=getProductReviews&productId=${productId}`)
+            .then(response => response.json())
+            .then(reviews => {
+                const reviewsList = document.getElementById('reviewsList');
+                reviewsList.innerHTML = reviews.map(review => `
+                    <div class="review">
+                        <p>Rating: ${review.rating}/5</p>
+                        <p>Review: ${review.review_text}</p>
+                        <p>Date: ${review.created_at}</p>
+                    </div>
+                `).join('');
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function evaluateRecipe() {
+            const recipeId = document.getElementById('evaluateRecipeId').value;
+            fetch(`/api/handler.php?action=evaluateRecipe&recipeId=${recipeId}`)
+            .then(response => response.json())
+            .then(result => {
+                document.getElementById('recipeFeedback').innerHTML = `
+                    <p>Status: ${result.status}</p>
+                    <p>Message: ${result.message}</p>
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>

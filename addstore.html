@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Store</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        form { border: 1px solid #ddd; padding: 20px; }
+        input { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #message { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+    </style>
+</head>
+<body>
+    <h1>Add Store</h1>
+    <form id="addStoreForm">
+        <input type="text" id="brand" placeholder="Brand" required>
+        <input type="text" id="region" placeholder="Region" required>
+        <input type="text" id="area" placeholder="Area" required>
+        <input type="text" id="storeName" placeholder="Store Name" required>
+        <input type="text" id="zipcode" placeholder="Zipcode" required>
+        <input type="text" id="address" placeholder="Address" required>
+        <button type="submit">Add Store</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        function displayMessage(text, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'error' : 'success';
+        }
+
+        document.getElementById('addStoreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const storeData = {
+                brand: document.getElementById('brand').value,
+                region: document.getElementById('region').value,
+                area: document.getElementById('area').value,
+                storeName: document.getElementById('storeName').value,
+                zipcode: document.getElementById('zipcode').value,
+                address: document.getElementById('address').value
+            };
+
+            fetch('/api/addstore.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer token1' // Replace with actual token
+                },
+                body: JSON.stringify(storeData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    displayMessage(data.message);
+                    document.getElementById('addStoreForm').reset();
+                } else {
+                    displayMessage(data.message, true);
+                }
+            })
+            .catch(error => {
+                displayMessage('An error occurred while adding the store.', true);
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>

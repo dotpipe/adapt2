@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Feedback Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; }
+        .store-selector { margin-bottom: 20px; }
+        select { width: 100%; padding: 10px; font-size: 16px; }
+        .heatmap { display: flex; flex-direction: column; }
+        .day-row { display: flex; align-items: center; margin-bottom: 5px; }
+        .day-label { width: 100px; font-weight: bold; }
+        .hour-cell { width: 20px; height: 20px; margin: 2px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Store Feedback Dashboard</h1>
+        <div class="store-selector">
+            <select id="storeSelect">
+                <option value="">Select a store</option>
+                <!-- Store options will be populated dynamically -->
+            </select>
+        </div>
+        <div id="heatmapContainer"></div>
+    </div>
+
+    <script>
+        function populateStores() {
+            // In a real scenario, fetch this data from your API
+            const stores = [
+                { id: 1, name: "Store A" },
+                { id: 2, name: "Store B" },
+                { id: 3, name: "Store C" }
+            ];
+            const select = document.getElementById('storeSelect');
+            stores.forEach(store => {
+                const option = document.createElement('option');
+                option.value = store.id;
+                option.textContent = store.name;
+                select.appendChild(option);
+            });
+        }
+
+        function generateHeatmap(storeId) {
+            fetch(`/api/dashboard.php?store_id=${storeId}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('heatmapContainer').innerHTML = html;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.getElementById('storeSelect').addEventListener('change', function() {
+            const storeId = this.value;
+            if (storeId) {
+                generateHeatmap(storeId);
+            } else {
+                document.getElementById('heatmapContainer').innerHTML = '';
+            }
+        });
+
+        populateStores();
+    </script>
+</body>
+</html>

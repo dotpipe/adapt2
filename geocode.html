@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Geocoding</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="text"] { width: 100%; padding: 8px; font-size: 16px; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; font-size: 16px; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; background-color: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <h1>Address Geocoding</h1>
+    <div class="input-group">
+        <label for="address">Enter Address:</label>
+        <input type="text" id="address" placeholder="Enter full address">
+    </div>
+    <button onclick="geocodeAddress()">Get Coordinates</button>
+    <div id="result"></div>
+
+    <script>
+        function geocodeAddress() {
+            const address = document.getElementById('address').value;
+            if (!address) {
+                alert('Please enter an address');
+                return;
+            }
+
+            fetch(`/api/geocode.php?address=${encodeURIComponent(address)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultDiv = document.getElementById('result');
+                    if (data) {
+                        resultDiv.innerHTML = `
+                            <h3>Geocoding Result:</h3>
+                            <p>Latitude: ${data.latitude}</p>
+                            <p>Longitude: ${data.longitude}</p>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = '<p>Unable to geocode the address. Please try again.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('result').innerHTML = '<p>An error occurred. Please try again later.</p>';
+                });
+        }
+    </script>
+</body>
+</html>
