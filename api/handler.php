@@ -93,4 +93,45 @@ class ReviewHandler
     }
 }
 
+$reviewHandler = new ReviewHandler($db);
+
+// Capture the incoming JSON request body
+$requestBody = file_get_contents("php://input");
+
+// Decode the JSON body into an associative array
+$data = json_decode($requestBody, true);
+
+// Check the action parameter to determine which method to call
+if (isset($data['action'])) {
+    switch ($data['action']) {
+        case 'addProductReview':
+            $result = $reviewHandler->addProductReview(
+                $data['productId'],
+                $data['userId'],
+                $data['rating'],
+                $data['reviewText']
+            );
+            break;
+        case 'addProductFeedback':
+            $result = $reviewHandler->addProductFeedback(
+                $data['recipeId'],
+                $data['productId'],
+                $data['userId'],
+                $data['feedbackType'],
+                $data['reason']
+            );
+            break;
+        case 'getProductReviews':
+            $result = $reviewHandler->getProductReviews($data['productId']);
+            break;
+        case 'evaluateRecipe':
+            $result = $reviewHandler->evaluateRecipe($data['recipeId']);
+            break;
+        default:
+            $result = ["status" => "error", "message" => "Invalid action"];
+    }
+    echo json_encode($result);
+} else {
+    echo json_encode(["status" => "error", "message" => "Missing action parameter"]);
+}
 ?>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Brand Chain</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="file"] { width: 100%; padding: 8px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #message { margin-top: 20px; padding: 10px; border-radius: 5px; }
+        .success { background-color: #dff0d8; color: #3c763d; }
+        .error { background-color: #f2dede; color: #a94442; }
+    </style>
+</head>
+<body>
+    <h1>Create Brand Chain</h1>
+    <form id="chainForm">
+        <div class="form-group">
+            <label for="jsonFile">Upload Chain Store JSON:</label>
+            <input type="file" id="jsonFile" accept=".json" required>
+        </div>
+        <button type="submit">Submit Chain Data</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+        document.getElementById('chainForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('jsonFile');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const jsonData = JSON.parse(e.target.result);
+                    submitChainData(jsonData);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function submitChainData(data) {
+            fetch('./api/create_chain.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                const messageDiv = document.getElementById('message');
+                messageDiv.textContent = result.message;
+                messageDiv.className = result.success ? 'success' : 'error';
+                if (result.success) {
+                    document.getElementById('chainForm').reset();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('message').textContent = 'An error occurred. Please try again.';
+                document.getElementById('message').className = 'error';
+            });
+        }
+    </script>
+</body>
+</html>

@@ -8,14 +8,16 @@ $db = Database::getInstance()->getConnection();
 
 require_once 'ReviewHandler.php';
 
+$reviewHandler = new ReviewHandler($db);
+
 header('Content-Type: application/json');
 
-$recipeId = isset($_GET['recipe_id']) ? (int)$_GET['recipe_id'] : null;
+$requestBody = file_get_contents("php://input");
+$data = json_decode($requestBody, true);
 
-if ($recipeId) {
-    $reviewHandler = new ReviewHandler($db);
+if (isset($data['recipe_id'])) {
+    $recipeId = (int)$data['recipe_id'];
     $evaluation = $reviewHandler->evaluateRecipe($recipeId);
-
     echo json_encode($evaluation);
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Recipe ID not provided']);

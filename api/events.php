@@ -30,4 +30,24 @@ class EventHandler
     }
 }
 
+$eventHandler = new EventHandler($db);
+
+// Capture the incoming JSON request body
+$requestBody = file_get_contents("php://input");
+
+// Decode the JSON body into an associative array
+$data = json_decode($requestBody, true);
+
+// Check if the required fields are present
+if (isset($data['eventType'], $data['startDate'], $data['endDate'])) {
+    $result = $eventHandler->getPopularItemsForEvent(
+        $data['eventType'],
+        $data['startDate'],
+        $data['endDate']
+    );
+    echo json_encode($result);
+} else {
+    echo json_encode(["status" => "error", "message" => "Missing required fields"]);
+}
+
 ?>

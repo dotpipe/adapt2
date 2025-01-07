@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Finder</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .search-section, .results-section { margin-bottom: 20px; }
+        input, select { width: 100%; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        .recipe-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; }
+        .store-price { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Recipe Finder</h1>
+
+    <div class="search-section">
+        <input type="text" id="zipCode" placeholder="Enter Zip Code">
+        <input type="text" id="keywords" placeholder="Enter Keywords (comma-separated)">
+        <button onclick="searchRecipes()">Search Recipes</button>
+    </div>
+
+    <div class="surprise-section">
+        <button onclick="getRandomRecipes()">Surprise Me!</button>
+        <div id="randomRecipes"></div>
+    </div>
+    
+    <div class="results-section" id="recipeResults"></div>
+
+    <script>
+
+        function getRandomRecipes() {
+            fetch('/api/recipe.php?action=random')
+                .then(response => response.json())
+                .then(recipes => displayRandomRecipes(recipes))
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayRandomRecipes(recipes) {
+            const container = document.getElementById('randomRecipes');
+            container.innerHTML = recipes.map(recipe => `
+                <div class="recipe-card">
+                    <h3>${recipe.name}</h3>
+                    <p>Average Price: $${recipe.avg_price.toFixed(2)}</p>
+                    <p>Last Viewed: ${recipe.last_viewed}</p>
+                </div>
+            `).join('');
+        }
+
+        function searchRecipes() {
+            const zipCode = document.getElementById('zipCode').value;
+            const keywords = document.getElementById('keywords').value;
+
+            fetch(`/api/recipes.php?zipCode=${zipCode}&keywords=${keywords}`)
+                .then(response => response.json())
+                .then(recipes => displayRecipes(recipes))
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayRecipes(recipes) {
+            const resultsContainer = document.getElementById('recipeResults');
+            resultsContainer.innerHTML = '';
+
+            recipes.forEach(recipe => {
+                const recipeCard = document.createElement('div');
+                recipeCard.className = 'recipe-card';
+                recipeCard.innerHTML = `
+                    <h2>${recipe.name}</h2>
+                    <p>${recipe.description}</p>
+                    <h3>Ingredients:</h3>
+                    <ul>${recipe.ingredients.map(ing => `<li>${ing}</li>`).join('')}</ul>
+                    <h3>Instructions:</h3>
+                    <ol>${recipe.instructions.map(step => `<li>${step}</li>`).join('')}</ol>
+                    <h3>Available at:</h3>
+                    ${recipe.stores.map(store => `
+                        <div class="store-price">
+                            <p>${store.name}: $${store.totalPrice.toFixed(2)}</p>
+                            <p>Missing items: ${store.missingItems.join(', ')}</p>
+                        </div>
+                    `).join('')}
+                `;
+                resultsContainer.appendChild(recipeCard);
+            });
+        }
+    </script>
+</body>
+</html>

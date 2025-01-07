@@ -172,7 +172,36 @@ class StoreInventory
     }
 }
 
-// Example usage:
-// $inventory = new StoreInventory();
-// $inventory->createTables();
-// $inventory->productApiEndpoint();
+$storeInventory = new StoreInventory($db);
+
+$requestBody = file_get_contents("php://input");
+$data = json_decode($requestBody, true);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($data['store_id'], $data['sku'], $data['price'], $data['title'])) {
+        $result = $storeInventory->addProduct(
+            $data['store_id'],
+            $data['sku'],
+            $data['upc'] ?? null,
+            $data['price'],
+            $data['keywords'] ?? null,
+            $data['title'],
+            $data['size'] ?? null,
+            $data['weight'] ?? null
+        );
+        echo json_encode($result);
+    } else {
+        echo json_encode(['error' => 'Invalid input']);
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $filters = [];
+    if (isset($_GET['keywords'])) $filters['keywords'] = $_GET['keywords'];
+    if (isset($_GET['title'])) $filters['title'] = $_GET['title'];
+    if (isset($_GET['size'])) $filters['size'] = $_GET['size'];
+    if (isset($_GET['weight'])) $filters['weight'] = $_GET['weight'];
+
+    $products = $storeInventory->searchProducts($filters);
+    echo json_encode($products);
+} else {
+    echo json_encode(['message' => 'Method not allowed']);
+}

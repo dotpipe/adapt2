@@ -39,10 +39,9 @@ class StoreList
     /**
      * Constructor to initialize the database connection.
      */
-    public function __construct()
+    public function __construct($dbConnection)
     {
-        $this->pdo = new PDO('mysql:host=localhost;dbname=shopping_db', 'root', '');
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo = $dbConnection;
     }
 
     /**
@@ -163,8 +162,33 @@ class StoreList
     }
 }
 
-// Example usage:
-// $storeList = new StoreList();
-// $storeList->createTables();
-// $storeList->apiEndpoint();
-?>
+$storeList = new StoreList($db);
+
+$requestBody = file_get_contents("php://input");
+$data = json_decode($requestBody, true);
+
+header('Content-Type: application/json');
+
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'POST':
+        if (isset($data['store_id'], $data['feedback'], $data['hour'], $data['rating'])) {
+            $storeList->updateFeedback($data['store_id'], $data['feedback'], (int)$data['hour'], (int)$data['rating']);
+            echo json_encode(['message' => 'Feedback updated successfully']);
+        } else {
+            echo json_encode(['error' => 'Invalid input']);
+        }
+        break;
+
+    case 'GET':
+        if (isset($_GET['store_id'])) {
+            $feedback = $storeList->getFeedbackData($_GET['store_id']);
+            echo json_encode($feedback);
+        } else {
+            echo json_encode(['error' => 'Store ID is required']);
+        }
+        break;
+
+    default:
+        echo json_encode(['message' => 'Method not allowed']);
+        break;
+}

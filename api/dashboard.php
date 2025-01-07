@@ -119,7 +119,22 @@ HTML;
     }
 }
 
-// Example Usage
-// $dashboard = new AnalyticsDashboard();
-// $dashboard->renderDashboard(1); // Replace `1` with the store ID to display
+// Now you can use $db for database operations
+
+$dashboard = new AnalyticsDashboard($db);
+
+// Capture the incoming JSON request body
+$requestBody = file_get_contents("php://input");
+
+// Decode the JSON body into an associative array
+$data = json_decode($requestBody, true);
+
+// Check if the store_id is provided
+if (isset($data['store_id'])) {
+    $storeId = $data['store_id'];
+    $result = $dashboard->generateDashboard($storeId);
+    echo $result; // This already returns HTML content
+} else {
+    echo json_encode(["status" => "error", "message" => "Missing store_id"]);
+}
 ?>

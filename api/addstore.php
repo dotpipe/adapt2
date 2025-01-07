@@ -130,4 +130,28 @@ class StoreReference {
     }
 }
 
+// Now you can use $db for database operations
+
+$storeReference = new StoreReference($db);
+
+// Capture the incoming JSON request body
+$requestBody = file_get_contents("php://input");
+
+// Decode the JSON body into an associative array
+$data = json_decode($requestBody, true);
+
+// Check if the required fields are present
+if (isset($data['brand'], $data['region'], $data['area'], $data['storeName'], $data['zipcode'], $data['address'])) {
+    $result = $storeReference->addStore(
+        $data['brand'],
+        $data['region'],
+        $data['area'],
+        $data['storeName'],
+        $data['zipcode'],
+        $data['address']
+    );
+    echo json_encode($result);
+} else {
+    echo json_encode(["status" => "error", "message" => "Missing required fields"]);
+}
 ?>

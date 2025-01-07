@@ -159,8 +159,48 @@ class Requests
     }
 }
 
-// Example usage:
-// $Requests = new Requests();
-// $Requests->createTable();
-// $Requests->apiEndpoint();
+$requests = new Requests($db);
+
+$requestBody = file_get_contents("php://input");
+$data = json_decode($requestBody, true);
+
+switch ($_SERVER['REQUEST_METHOD']) {
+    case 'POST':
+        if (isset($data['customer_name'], $data['need_type'], $data['item'], $data['quantity'], $data['status'])) {
+            $id = $requests->createRecord($data['customer_name'], $data['need_type'], $data['item'], $data['quantity'], $data['status']);
+            echo json_encode(['message' => 'Record created', 'id' => $id]);
+        } else {
+            echo json_encode(['error' => 'Invalid input']);
+        }
+        break;
+
+    case 'PUT':
+        if (isset($data['id'])) {
+            $id = $data['id'];
+            unset($data['id']);
+            $success = $requests->updateRecord($id, $data);
+            echo json_encode(['message' => $success ? 'Record updated' : 'Update failed']);
+        } else {
+            echo json_encode(['error' => 'Missing ID']);
+        }
+        break;
+
+    case 'DELETE':
+        if (isset($data['id'])) {
+            $success = $requests->deleteRecord($data['id']);
+            echo json_encode(['message' => $success ? 'Record deleted' : 'Delete failed']);
+        } else {
+            echo json_encode(['error' => 'Missing ID']);
+        }
+        break;
+
+    case 'GET':
+        $records = $requests->getAllRecords();
+        echo json_encode($records);
+        break;
+
+    default:
+        echo json_encode(['message' => 'Method not allowed']);
+        break;
+}
 ?>

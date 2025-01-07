@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Recipe</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea { width: 100%; padding: 8px; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        #ingredientList, #instructionList { list-style-type: none; padding: 0; }
+        .list-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Create New Recipe</h1>
+    <form id="recipeForm">
+        <div class="form-group">
+            <label for="recipeName">Recipe Name:</label>
+            <input type="text" id="recipeName" required>
+        </div>
+        <div class="form-group">
+            <label for="keywords">Keywords (comma-separated):</label>
+            <input type="text" id="keywords" required>
+        </div>
+        <div class="form-group">
+            <label for="ingredient">Add Ingredient:</label>
+            <input type="text" id="ingredient" placeholder="Name">
+            <input type="text" id="amount" placeholder="Amount">
+            <button type="button" onclick="addIngredient()">Add</button>
+        </div>
+        <ul id="ingredientList"></ul>
+        <div class="form-group">
+            <label for="instruction">Add Instruction:</label>
+            <input type="text" id="instruction">
+            <button type="button" onclick="addInstruction()">Add</button>
+        </div>
+        <ol id="instructionList"></ol>
+        <button type="submit">Submit Recipe</button>
+    </form>
+
+    <script>
+        let ingredients = [];
+        let instructions = [];
+
+        function addIngredient() {
+            const name = document.getElementById('ingredient').value;
+            const amount = document.getElementById('amount').value;
+            if (name && amount) {
+                ingredients.push({ name, amount });
+                updateIngredientList();
+                document.getElementById('ingredient').value = '';
+                document.getElementById('amount').value = '';
+            }
+        }
+
+        function addInstruction() {
+            const instruction = document.getElementById('instruction').value;
+            if (instruction) {
+                instructions.push(instruction);
+                updateInstructionList();
+                document.getElementById('instruction').value = '';
+            }
+        }
+
+        function updateIngredientList() {
+            const list = document.getElementById('ingredientList');
+            list.innerHTML = ingredients.map((ing, index) => 
+                `<li class="list-item">${ing.name} - ${ing.amount} <button onclick="removeIngredient(${index})">Remove</button></li>`
+            ).join('');
+        }
+
+        function updateInstructionList() {
+            const list = document.getElementById('instructionList');
+            list.innerHTML = instructions.map((inst, index) => 
+                `<li class="list-item">${inst} <button onclick="removeInstruction(${index})">Remove</button></li>`
+            ).join('');
+        }
+
+        function removeIngredient(index) {
+            ingredients.splice(index, 1);
+            updateIngredientList();
+        }
+
+        function removeInstruction(index) {
+            instructions.splice(index, 1);
+            updateInstructionList();
+        }
+
+        document.getElementById('recipeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const recipeData = {
+                name: document.getElementById('recipeName').value,
+                keywords: document.getElementById('keywords').value.split(',').map(k => k.trim()),
+                recipe_data: {
+                    ingredients: ingredients,
+                    instructions: instructions
+                }
+            };
+
+            fetch('./api/recipe.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(recipeData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message);
+                // Reset form
+                document.getElementById('recipeForm').reset();
+                ingredients = [];
+                instructions = [];
+                updateIngredientList();
+                updateInstructionList();
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

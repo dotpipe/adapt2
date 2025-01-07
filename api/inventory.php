@@ -127,3 +127,36 @@ class Inventory {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+
+$inventory = new Inventory($db);
+
+$requestBody = file_get_contents("php://input");
+$data = json_decode($requestBody, true);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($data['productName'], $data['category'], $data['price'], $data['stockQuantity'], $data['storeId'])) {
+        $result = $inventory->addProduct(
+            $data['productName'],
+            $data['category'],
+            $data['price'],
+            $data['stockQuantity'],
+            $data['storeId'],
+            $data['keywords'] ?? []
+        );
+        echo json_encode(['status' => 'success', 'message' => 'Product added successfully', 'productId' => $result]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['searchTerm'], $_GET['storeId'])) {
+        $result = $inventory->searchInventory($_GET['searchTerm'], $_GET['storeId']);
+        echo json_encode($result);
+    } elseif (isset($_GET['keywords'])) {
+        $result = $inventory->searchInventoryByKeywords(explode(',', $_GET['keywords']));
+        echo json_encode($result);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Invalid search parameters']);
+    }
+} else {
+    echo json_encode(['status' => 'error', 'message' => 'Invalid request method']);
+}

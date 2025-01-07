@@ -27,4 +27,22 @@ class Geocode
         }
     }
 }
+
+// Capture the incoming JSON request body
+$requestBody = file_get_contents("php://input");
+
+// Decode the JSON body into an associative array
+$data = json_decode($requestBody, true);
+
+// Check if the address is provided
+if (isset($data['address'])) {
+    $coordinates = Geocode::getCoordinates($data['address']);
+    if ($coordinates) {
+        echo json_encode($coordinates);
+    } else {
+        echo json_encode(["status" => "error", "message" => "Unable to geocode the address"]);
+    }
+} else {
+    echo json_encode(["status" => "error", "message" => "Missing address"]);
+}
 ?>
