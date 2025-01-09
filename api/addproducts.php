@@ -1,6 +1,7 @@
 <?php
 // Assuming you have autoload or manual inclusion of the Inventory class
 require_once './Database.php';
+require_once './inventory.php';
 
 $db = Database::getInstance()->getConnection();
 
@@ -17,29 +18,31 @@ $data = json_decode($requestBody, true);
 
 // Check if the data is valid
 if (!isset($data['products']) || !is_array($data['products'])) {
-    echo json_encode(['error' => 'Invalid input. Expected an array of products.']);
+    echo json_encode(['error' => ($data)]);
     exit;
 }
 
 // Instantiate the Inventory class
-$inventory = new Inventory($dbConnection);  // Pass your DB connection to the class
+$inventory = new Inventory($db);  // Pass your DB connection to the class
 
 // Process each product in the array
 foreach ($data['products'] as $product) {
     // Validate the product (you can extend this logic further)
-    if (!isset($product['product_name'], $product['category'], $product['price'], $product['stock_quantity'], $product['store_id'])) {
-        echo json_encode(['error' => 'Missing required fields in product data.']);
+    if (!isset($product['title'], $product['sku'], $product['upc'], $product['product_id'], $product['price'], $product['store_id'], $product['size'], $product['weight'])) {
+        echo json_encode(['error' => ($product)]);
         exit;
     }
-
     // Add the product to the inventory
     try {
         $inventory->addProduct(
-            $product['product_name'],
-            $product['category'],
+            $product['title'],
+            $product['sku'],
+            $product['upc'],
+            $product['product_id'],
             $product['price'],
-            $product['stock_quantity'],
             $product['store_id'],
+            $product['size'],
+            $product['weight'],
             $product['keywords'] ?? []  // Default to empty array if no keywords
         );
     } catch (Exception $e) {

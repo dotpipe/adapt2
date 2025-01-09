@@ -20,11 +20,11 @@ class Inventory {
     }
 
     // Add a new product to the inventory
-    public function addProduct($productName, $category, $price, $stockQuantity, $storeId, $keywords = []) {
+    public function addProduct($title, $sku, $upc, $product_id, $price, $store_id, $size, $weight, $keywords = []) {
         // Insert the product
-        $stmt = $this->db->prepare("INSERT INTO inventory (product_name, category, price, stock_quantity, store_id) 
-                                    VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$productName, $category, $price, $stockQuantity, $storeId]);
+        $stmt = $this->db->prepare("INSERT INTO inventory (title, sku, upc, product_id, price, store_id, size, weight) 
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $sku, $upc, $product_id, $price, $store_id, $size, $weight]);
         $productId = $this->db->lastInsertId();
 
         // Add keywords to the product
@@ -52,22 +52,21 @@ class Inventory {
     }
 
     // Update an existing product in the inventory
-    public function updateProduct($productId, $productName, $category, $price, $stockQuantity, $keywords = []) {
-        $stmt = $this->db->prepare("UPDATE inventory SET product_name = ?, category = ?, price = ?, stock_quantity = ? 
+    public function updateProduct($title, $sku, $upc, $product_id, $price, $store_id, $size, $weight, $keywords = []) {
+        $stmt = $this->db->prepare("UPDATE inventory SET title = ?, sku = ?, upc, product_id, price = ?, store_id, size, weight = ? 
                                     WHERE product_id = ?");
-        $stmt->execute([$productName, $category, $price, $stockQuantity, $productId]);
-
+        $stmt->execute([$title, $sku, $upc, $product_id, $price, $store_id, $size, $weight]);
         // Update keywords
-        $this->updateProductKeywords($productId, $keywords);
+        $this->updateProductKeywords($product_id, $keywords);
     }
 
     // Remove a product from the inventory
-    public function removeProduct($productId) {
+    public function removeProduct($product_id) {
         $stmt = $this->db->prepare("DELETE FROM inventory WHERE product_id = ?");
-        $stmt->execute([$productId]);
+        $stmt->execute([$product_id]);
 
         // Remove the product's keywords from the association table
-        $this->removeProductKeywords($productId);
+        $this->removeProductKeywords($product_id);
     }
 
     // Add or update the keywords associated with a product
@@ -122,7 +121,7 @@ class Inventory {
 
     // Search for products by category or name
     public function searchInventory($searchTerm, $storeId) {
-        $stmt = $this->db->prepare("SELECT * FROM inventory WHERE store_id = ? AND (product_name LIKE ? OR category LIKE ?)");
+        $stmt = $this->db->prepare("SELECT * FROM inventory WHERE store_id = ? AND (title LIKE ? OR keywords LIKE ?)");
         $stmt->execute([$storeId, "%$searchTerm%", "%$searchTerm%"]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -134,22 +133,25 @@ $requestBody = file_get_contents("php://input");
 $data = json_decode($requestBody, true);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($data['productName'], $data['category'], $data['price'], $data['stockQuantity'], $data['storeId'])) {
-        $result = $inventory->addProduct(
-            $data['productName'],
-            $data['category'],
-            $data['price'],
-            $data['stockQuantity'],
-            $data['storeId'],
-            $data['keywords'] ?? []
+    if (isset($data['title'], $data['sku'], $data['upc'], $data['product_id'], $data['price'], $data['store_id'], $data['size'], $data['weight'], $data['keywords'])) {
+        $inventory->addProduct(
+            $product['title'],
+            $product['sku'],
+            $product['upc'],
+            $product['product_id'],
+            $product['price'],
+            $product['store_id'],
+            $product['size'],
+            $product['weight'],
+            $product['keywords'] ?? []  // Default to empty array if no keywords
         );
         echo json_encode(['status' => 'success', 'message' => 'Product added successfully', 'productId' => $result]);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Missing required fields']);
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['searchTerm'], $_GET['storeId'])) {
-        $result = $inventory->searchInventory($_GET['searchTerm'], $_GET['storeId']);
+    if (isset($_GET['search'], $_GET['store_id'])) {
+        $result = $inventory->searchInventory($_GET['search'], $_GET['store_id']);
         echo json_encode($result);
     } elseif (isset($_GET['keywords'])) {
         $result = $inventory->searchInventoryByKeywords(explode(',', $_GET['keywords']));

@@ -10,13 +10,8 @@ class StoreReference {
     private $validTokens = ['token1', 'token2']; // Predefined valid tokens, you can adjust this.
 
     // Constructor to initialize the PDO connection
-    public function __construct($host, $db, $user) {
-        try {
-            $this->pdo = new PDO("mysql:host=$host;dbname=$db", $user);
-            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        } catch (PDOException $e) {
-            die("Could not connect to the database: " . $e->getMessage());
-        }
+    public function __construct($db) {
+        $this->pdo = $db;
     }
 
     // Method to check the token in the request headers
@@ -38,33 +33,41 @@ class StoreReference {
     }
 
     // Method to add a new store reference
-    public function addStore($brand, $region, $area, $storeName, $zipcode, $address) {
+    public function addStore($brand, $region, $area, $location, $address, $store_id, $open, $hours, $zipcode) {
         if (!$this->checkToken()) {
-            return $this->jsonResponse(["status" => "error", "message" => "Unauthorized: Invalid Token"]);
+            return ["status" => "error", "message" => "Unauthorized: Invalid Token"];
         }
+	try {
+	        $sql = "INSERT INTO stores (brand, region, area, location, store_id, address, open, hours, zipcode) 
+	                VALUES (:brand, :region, :area, :location, :store_id, :address, :open, :hours, :zipcode)";
+	        $stmt = $this->pdo->prepare($sql);
+	        $stmt->execute([
+	            ':brand' => $brand,
+	            ':region' => $region,
+	            ':area' => $area,
+	            ':location' => $location,
+	            ':address' => $address,
+	            ':store_id' => $store_id,
+	            ':open' => $open,
+		    ':hours' => $hours,
+		    ':zipcode' => $zipcode
+	        ]);
 
-        $sql = "INSERT INTO stores (brand, region, area, store_name, zipcode, address) 
-                VALUES (:brand, :region, :area, :store_name, :zipcode, :address)";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([
-            ':brand' => $brand,
-            ':region' => $region,
-            ':area' => $area,
-            ':store_name' => $storeName,
-            ':zipcode' => $zipcode,
-            ':address' => $address
-        ]);
-        return $this->jsonResponse(["status" => "success", "message" => "Store added successfully"]);
+		return ["status" => "success", "message" => "Store added successfully"];
+	} catch (EXCEPTION $e) {
+		return ["message" => $e, "status" => "error"];
+	}
     }
 
     // Method to get store references based on filters
     public function getStores($filters = []) {
         if (!$this->checkToken()) {
-            return $this->jsonResponse(["status" => "error", "message" => "Unauthorized: Invalid Token"]);
+            return ["status" => "error", "message" => "Unauthorized: Invalid Token"];
         }
 
-        $sql = "SELECT * FROM stores WHERE 1";
-
+        $sql = "SELECT * FROM stores WHERE";
+	if (count($filters) > 0)
+	    $sql .= " 1";
         // Apply filters to the SQL query
         if (isset($filters['brand'])) {
             $sql .= " AND brand = :brand";
@@ -75,57 +78,73 @@ class StoreReference {
         if (isset($filters['area'])) {
             $sql .= " AND area = :area";
         }
+        if (isset($filters['location'])) {
+            $sql .= " AND location = :location";
+        }
+        if (isset($filters['address'])) {
+            $sql .= " AND address = :address";
+        }
+        if (isset($filters['store_id'])) {
+            $sql .= " AND store_id = :store_id";
+        }
+        if (isset($filters['open'])) {
+            $sql .= " AND open = :open";
+        }
+        if (isset($filters['hours'])) {
+            $sql .= " AND hours = :hours";
+        }
+        if (isset($filters['zipcode'])) {
+            $sql .= " AND zipcode = :zipcode";
+        }
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($filters);
         $stores = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        return $this->jsonResponse($stores);
+        return $stores;
     }
 
     // Method to update a store's details
-    public function updateStore($storeId, $brand, $region, $area, $storeName, $zipcode, $address) {
+    public function updateStore($brand, $region, $area, $location, $address, $store_id, $open, $hours, $zipcode) {
         if (!$this->checkToken()) {
-            return $this->jsonResponse(["status" => "error", "message" => "Unauthorized: Invalid Token"]);
+            return ["status" => "error", "message" => "Unauthorized: Invalid Token"];
         }
 
         $sql = "UPDATE stores SET 
                 brand = :brand, 
                 region = :region, 
                 area = :area, 
-                store_name = :store_name, 
-                zipcode = :zipcode, 
-                address = :address 
-                WHERE store_id = :store_id";
+                location = :location, 
+		address = :address,
+		store_id = :store_id,
+		open = :open,
+                hours = :hours,
+                zipcode = :zipcode 
+                WHERE id = :id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             ':brand' => $brand,
             ':region' => $region,
             ':area' => $area,
-            ':store_name' => $storeName,
-            ':zipcode' => $zipcode,
+            ':location' => $location,
             ':address' => $address,
-            ':store_id' => $storeId
+            ':brand' => $store_id,
+            ':region' => $open,
+            ':area' => $hours,
+	    ':zipcode' => $zipcode
         ]);
-        return $this->jsonResponse(["status" => "success", "message" => "Store updated successfully"]);
+        return ["status" => "success", "message" => "Store updated successfully"];
     }
-
     // Method to delete a store reference
     public function deleteStore($storeId) {
         if (!$this->checkToken()) {
-            return $this->jsonResponse(["status" => "error", "message" => "Unauthorized: Invalid Token"]);
+            return ["status" => "error", "message" => "Unauthorized: Invalid Token"];
         }
 
-        $sql = "DELETE FROM stores WHERE store_id = :store_id";
+        $sql = "DELETE FROM stores WHERE id = :store_id";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':store_id' => $storeId]);
-        return $this->jsonResponse(["status" => "success", "message" => "Store deleted successfully"]);
-    }
-
-    // Helper method to return a JSON response
-    private function jsonResponse($data) {
-        header('Content-Type: application/json');
-        echo json_encode($data, JSON_PRETTY_PRINT);
+        return ["status" => "success", "message" => "Store deleted successfully"];
     }
 }
 
@@ -140,14 +159,9 @@ $requestBody = file_get_contents("php://input");
 $data = json_decode($requestBody, true);
 
 // Check if the required fields are present
-if (isset($data['brand'], $data['region'], $data['area'], $data['storeName'], $data['zipcode'], $data['address'])) {
+if (isset($data['brand'], $data['region'], $data['area'], $data['location'], $data['address'], $data['store_id'], $data['open'], $data['hours'], $data['zipcode'])) {
     $result = $storeReference->addStore(
-        $data['brand'],
-        $data['region'],
-        $data['area'],
-        $data['storeName'],
-        $data['zipcode'],
-        $data['address']
+	$data['brand'], $data['region'], $data['area'], $data['location'], $data['address'], $data['store_id'], $data['open'], $data['hours'], $data['zipcode']
     );
     echo json_encode($result);
 } else {

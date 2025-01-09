@@ -38,10 +38,9 @@ class StoreInventory
     /**
      * Constructor to initialize the database connection.
      */
-    public function __construct()
+    public function __construct($db)
     {
-        $this->pdo = new PDO('mysql:host=localhost;dbname=shopping_db', 'root', '');
-        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->pdo = $db;
     }
 
     /**
@@ -87,7 +86,7 @@ class StoreInventory
             case 'POST':
                 $input = json_decode(file_get_contents('php://input'), true);
                 if (isset($input['store_id'], $input['sku'], $input['price'], $input['title'])) {
-                    $query = "INSERT INTO products (store_id, sku, upc, price, keywords, title, size, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                    $query = "INSERT INTO inventory (store_id, sku, upc, price, keywords, title, size, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                     $stmt = $this->pdo->prepare($query);
                     $stmt->execute([
                         $input['store_id'],
@@ -107,22 +106,31 @@ class StoreInventory
 
             case 'GET':
                 $filters = [];
-                $sql = "SELECT * FROM products WHERE 1=1";
-
+                $sql = "SELECT * FROM inventory WHERE ";
+		$and = "";
                 if (isset($_GET['keywords'])) {
-                    $sql .= " AND keywords LIKE ?";
+                    $sql .= "keywords LIKE ?";
+		    $and = " AND";
                     $filters[] = '%' . $_GET['keywords'] . '%';
                 }
+                if (isset($_GET['store_id'])) {
+                    $sql .= "$and store_id LIKE ?";
+		    $and = " AND";
+                    $filters[] = '%' . $_GET['store_id'] . '%';
+                }
                 if (isset($_GET['title'])) {
-                    $sql .= " AND title LIKE ?";
+                    $sql .= "$and title LIKE ?";
+		    $and = " AND";
                     $filters[] = '%' . $_GET['title'] . '%';
                 }
                 if (isset($_GET['size'])) {
-                    $sql .= " AND size = ?";
+                    $sql .= "$and size = ?";
+		    $and = " AND";
                     $filters[] = $_GET['size'];
                 }
                 if (isset($_GET['weight'])) {
-                    $sql .= " AND weight = ?";
+                    $sql .= "$and weight = ?";
+		    $and = " AND";
                     $filters[] = $_GET['weight'];
                 }
 
@@ -170,6 +178,69 @@ class StoreInventory
         $stmt->execute([$storeId]);
         return $stmt->fetchColumn();
     }
+	
+    public function searchProducts($filters) {
+	    $sql = "SELECT * FROM inventory WHERE ";
+	    $params = [];
+	    $and = "";
+	    if (isset($filters['keywords'])) {
+	        $sql .= "keywords LIKE ?";
+		$and = "AND";
+	        $params[] = '%' . $filters['keywords'] . '%';
+	    }
+	    if (isset($filters['store_id'])) {
+	        $sql .= "$and store_id LIKE ?";
+		$and = " AND";
+	        $params[] = '%' . $filters['store_id'] . '%';
+	    }
+	    if (isset($filters['sku'])) {
+	        $sql .= "$and sku LIKE ?";
+		$and = " AND";
+	        $params[] = '%' . $filters['sku'] . '%';
+	    }
+	    if (isset($filters['title'])) {
+	        $sql .= "$and title LIKE ?";
+		$and = " AND";
+	        $params[] = '%' . $filters['title'] . '%';
+	    }
+	    if (isset($filters['size'])) {
+	        $sql .= "$and size = ?";
+		$and = " AND";
+	        $params[] = $filters['size'];
+	    }
+	    if (isset($filters['weight'])) {
+	        $sql .= "$and weight = ?";
+	        $params[] = $filters['weight'];
+	    }
+
+	    $stmt = $this->pdo->prepare($sql);
+	    $stmt->execute($params);
+	    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+	    $nestedOutput = [];
+	    foreach ($products as $product) {
+	        $key = $product['title'];
+	        if (!isset($nestedOutput[$key])) {
+	            $nestedOutput[$key] = [
+	                'product_title' => $product['title'],
+	                'stores' => []
+	            ];
+	        }
+
+	        $nestedOutput[$key]['stores'][] = [
+	            'store_id' => $product['store_id'],
+	            'sku' => $product['sku'],
+	            'upc' => $product['upc'],
+	            'price' => $product['price'],
+	            'location' => $this->getStoreLocation($product['store_id']) ?? null,
+	            'size' => $product['size'],
+	            'weight' => $product['weight']
+	        ];
+	    }
+
+	    return array_values($nestedOutput);
+	}
+
 }
 
 $storeInventory = new StoreInventory($db);
@@ -177,28 +248,14 @@ $storeInventory = new StoreInventory($db);
 $requestBody = file_get_contents("php://input");
 $data = json_decode($requestBody, true);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($data['store_id'], $data['sku'], $data['price'], $data['title'])) {
-        $result = $storeInventory->addProduct(
-            $data['store_id'],
-            $data['sku'],
-            $data['upc'] ?? null,
-            $data['price'],
-            $data['keywords'] ?? null,
-            $data['title'],
-            $data['size'] ?? null,
-            $data['weight'] ?? null
-        );
-        echo json_encode($result);
-    } else {
-        echo json_encode(['error' => 'Invalid input']);
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $filters = [];
-    if (isset($_GET['keywords'])) $filters['keywords'] = $_GET['keywords'];
-    if (isset($_GET['title'])) $filters['title'] = $_GET['title'];
-    if (isset($_GET['size'])) $filters['size'] = $_GET['size'];
-    if (isset($_GET['weight'])) $filters['weight'] = $_GET['weight'];
+    if (isset($_GET['store_id']) && $_GET['store_id'] !== '') $filters['store_id'] = $_GET['store_id'];
+    if (isset($_GET['keywords']) && $_GET['keywords'] !== '') $filters['keywords'] = $_GET['keywords'];
+    if (isset($_GET['sku'])) $filters['sku'] = $_GET['sku'];
+    if (isset($_GET['title']) && $_GET['title'] !== '') $filters['title'] = $_GET['title'];
+    if (isset($_GET['size']) && $_GET['size'] !== '') $filters['size'] = $_GET['size'];
+    if (isset($_GET['weight']) && $_GET['weight'] !== '') $filters['weight'] = $_GET['weight'];
 
     $products = $storeInventory->searchProducts($filters);
     echo json_encode($products);

@@ -20,12 +20,15 @@
     <div class="section">
         <h2>Add Product</h2>
         <form id="addProductForm">
-            <input type="text" id="productName" placeholder="Product Name" required>
-            <input type="text" id="category" placeholder="Category" required>
+            <input type="text" id="title" placeholder="Product Name" required>
+            <input type="text" id="sku" placeholder="SKU" required>
+            <input type="text" id="upc" placeholder="UPC" required>
+            <input type="text" id="product_id" placeholder="Product Id" required>
             <input type="number" id="price" placeholder="Price" step="0.01" required>
-            <input type="number" id="stockQuantity" placeholder="Stock Quantity" required>
-            <input type="number" id="storeId" placeholder="Store ID" required>
-            <input type="text" id="keywords" placeholder="Keywords (comma-separated)">
+            <input type="number" id="store_id" placeholder="Store ID" required>
+            <input type="number" id="size" placeholder="Size" required>
+            <input type="number" id="weight" placeholder="Weight" required>
+            <input type="text" id="keywords" placeholder="Keywords (comma-separated)" required>
             <button type="submit">Add Product</button>
         </form>
     </div>
@@ -46,11 +49,14 @@
         function addProduct(event) {
             event.preventDefault();
             const productData = {
-                product_name: document.getElementById('productName').value,
-                category: document.getElementById('category').value,
-                price: parseFloat(document.getElementById('price').value),
-                stock_quantity: parseInt(document.getElementById('stockQuantity').value),
-                store_id: parseInt(document.getElementById('storeId').value),
+                title: document.getElementById('title').value,
+                sku: document.getElementById('sku').value,
+                upc: document.getElementById('upc').value,
+                product_id: document.getElementById('product_id').value,
+                price: document.getElementById('price').value,
+                store_id: document.getElementById('store_id').value,
+                price: parseFloat(document.getElementById('size').value),
+                stock_quantity: parseInt(document.getElementById('weight').value),
                 keywords: document.getElementById('keywords').value.split(',').map(k => k.trim())
             };
 
@@ -78,6 +84,7 @@
         }
 
         function displayInventory(products) {
+	    console.log(products);
             const inventoryList = document.getElementById('inventoryList');
             if (products.length === 0) {
                 inventoryList.innerHTML = '<p>No products found.</p>';
@@ -88,20 +95,29 @@
                 <table>
                     <tr>
                         <th>Product Name</th>
-                        <th>Category</th>
+                        <th>SKU</th>
+                        <th>UPC</th>
+                        <th>Product ID</th>
                         <th>Price</th>
-                        <th>Stock</th>
-                        <th>Actions</th>
+                        <th>Store ID</th>
+                        <th>Size</th>
+                        <th>Weight</th>
+                        <th>Keywords</th>
                     </tr>
             `;
-
+	    
             products.forEach(product => {
                 tableHtml += `
                     <tr>
-                        <td>${product.product_name}</td>
-                        <td>${product.category}</td>
+                        <td>${product.title}</td>
+                        <td>${product.sku}</td>
+                        <td>${product.upc}</td>
+                        <td>${product.product_id}</td>
                         <td>$${product.price}</td>
-                        <td>${product.stock_quantity}</td>
+                        <td>${product.store_id}</td>
+                        <td>${product.size}</td>
+                        <td>${product.weight}</td>
+                        <td>${product.keywords}</td>
                         <td>
                             <button onclick="updateProduct(${product.product_id})">Update</button>
                             <button onclick="removeProduct(${product.product_id})">Remove</button>
@@ -114,14 +130,14 @@
             inventoryList.innerHTML = tableHtml;
         }
 
-        function updateProduct(productId) {
+        function updateProduct(product_id) {
             // Implement update functionality
-            console.log('Update product:', productId);
+            console.log('Update product:', product_id);
         }
 
-        function removeProduct(productId) {
+        function removeProduct(product_id) {
             if (confirm('Are you sure you want to remove this product?')) {
-                fetch(`./api/inventory.php?remove=${productId}`, { method: 'DELETE' })
+                fetch(`./api/inventory.php?remove=${product_id}`, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     alert('Product removed successfully!');

@@ -20,9 +20,11 @@
         <input type="text" id="brand" placeholder="Brand" required>
         <input type="text" id="region" placeholder="Region" required>
         <input type="text" id="area" placeholder="Area" required>
-        <input type="text" id="storeName" placeholder="Store Name" required>
-        <input type="text" id="zipcode" placeholder="Zipcode" required>
+        <input type="text" id="location" placeholder="Location" required>
+        <input type="text" id="store_id" placeholder="Store ID" required>
         <input type="text" id="address" placeholder="Address" required>
+        <input type="time" id="open" placeholder="Opening Time" required>
+        <input type="number" id="hours" placeholder="Hours Open" required>
         <button type="submit">Add Store</button>
     </form>
     <div id="message"></div>
@@ -41,9 +43,11 @@
                 brand: document.getElementById('brand').value,
                 region: document.getElementById('region').value,
                 area: document.getElementById('area').value,
-                storeName: document.getElementById('storeName').value,
-                zipcode: document.getElementById('zipcode').value,
-                address: document.getElementById('address').value
+                location: document.getElementById('location').value,
+                store_id: document.getElementById('store_id').value,
+                address: document.getElementById('address').value,
+                open: document.getElementById('open').value,
+                hours: document.getElementById('hours').value
             };
 
             fetch('./api/addstore.php', {
@@ -54,8 +58,9 @@
                 },
                 body: JSON.stringify(storeData)
             })
-            .then(response => response.json())
+            .then(response => response.text())
             .then(data => {
+		console.log(data);
                 if (data.status === 'success') {
                     displayMessage(data.message);
                     document.getElementById('addStoreForm').reset();
