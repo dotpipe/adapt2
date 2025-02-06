@@ -32,7 +32,7 @@
     <script>
 
         function getRandomRecipes() {
-            fetch('/api/recipe.php?action=random')
+            fetch('./api/recipe.php?action=random')
                 .then(response => response.json())
                 .then(recipes => displayRandomRecipes(recipes))
                 .catch(error => console.error('Error:', error));

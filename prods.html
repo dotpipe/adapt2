@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Inventory Management</title>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #f4f4f4;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #shoppingListsContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .shopping-list-card {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 15px;
+        }
+
+        .shopping-list-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .shopping-list-actions button {
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        .shopping-list-search {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        #listSearch {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .search-results div {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .search-results div:hover {
+            background-color: #f0f0f0;
+        }
+
+        .current-shopping-list {
+            margin-top: 20px;
+        }
+
+        .price-change {
+            font-weight: bold;
+        }
+
+        .price-change.up {
+            color: red;
+        }
+
+        .price-change.down {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Store Inventory Management</h1>
+
+        <div class="section">
+            <h2>Shopping Lists</h2>
+            <div class="shopping-list-search">
+                <input type="text" id="listSearch" placeholder="Search shopping lists...">
+                <div id="listSearchResults" class="search-results"></div>
+            </div>
+            <button onclick="createNewShoppingList()">Create New Shopping List</button>
+            <div id="shoppingListsContainer"></div>
+            <div id="shoppingListContainer"></div>
+            
+        </div>
+
+        <div class="section">
+            <h2>Search Products</h2>
+            <input type="text" id="searchKeywords" placeholder="Search by keywords">
+            <input type="text" id="searchBrand" placeholder="Search by Brand">
+            <input type="text" id="searchSKU" placeholder="Search by SKU">
+            <input type="text" id="searchTitle" placeholder="Search by title">
+            <input type="text" id="searchSize" placeholder="Search by size">
+            <input type="text" id="searchWeight" placeholder="Search by weight">
+            <button onclick="searchProducts()">Search</button>
+        </div>
+
+        <div class="section">
+            <h2>Search Results</h2>
+            <div id="searchResultsContainer"></div>
+        </div>
+
+        <div id="currentShoppingList" class="current-shopping-list"></div>
+    </div>
+
+    <script>
+        'use strict';
+
+        let shoppingLists = [];
+        let currentListId = null;
+        let searchTimeout;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lazyLoadShoppingLists();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('listSearch').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    searchLists(e.target.value);
+                }, 300);
+            });
+
+            const listSearchResultsContainer = document.getElementById('listSearchResults');
+            listSearchResultsContainer.addEventListener('mouseenter', showSearchResults);
+            listSearchResultsContainer.addEventListener('mouseleave', hideSearchResults);
+        }
+
+        function lazyLoadShoppingLists() {
+            fetch('./api/get_shopping_lists.php')
+                .then(response => response.json())
+                .then(data => {
+                    shoppingLists = data;
+                    displayShoppingLists();
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function showSearchResults() {
+            clearTimeout(hideTimeout);
+            document.getElementById('listSearchResults').style.display = 'block';
+        }
+
+        function hideSearchResults() {
+            hideTimeout = setTimeout(() => {
+                document.getElementById('listSearchResults').style.display = 'none';
+            }, 1500);
+        }
+
+        function searchLists(query) {
+            fetch(`./api/search_lists.php?action=search&query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(displayListResults)
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayListResults(lists) {
+            const resultsContainer = document.getElementById('listSearchResults');
+            resultsContainer.innerHTML = lists.map(list =>
+                `<div onclick="loadShoppingList(${list.id})">${list.title}</div>`
+            ).join('');
+        }
+
+        function createNewShoppingList() {
+            const listName = prompt("Enter a name for your new shopping list:", "New Shopping List");
+            if (listName) {
+                const newList = { id: Date.now().toString(), title: listName, list_data: '[]' };
+                shoppingLists.push(newList);
+                currentListId = newList.id;
+                displayShoppingLists();
+                updateShoppingListDisplay(newList.id);
+                saveShoppingList(newList.id);
+            }
+        }
+
+        function displayShoppingLists() {
+            const container = document.getElementById('shoppingListsContainer');
+            container.innerHTML = shoppingLists.map(list => `
+                <div class="shopping-list-card" data-list-id="${list.id}">
+                    <h3>${list.title}</h3>
+                    <p>Total Items: ${JSON.parse(list.list_data).length}</p>
+                </div>
+            `).join('');
+
+            // Add click event listener to the container
+            container.addEventListener('click', handleShoppingListClick);
+        }
+
+
+        function loadShoppingList(listId) {
+            fetch(`./api/get_shopping_list.php?id=${listId}`)
+                .then(response => response.json())
+                .then(data => {
+                    const index = shoppingLists.findIndex(list => list.id === listId);
+                    if (index !== -1) {
+                        shoppingLists[index] = data;
+                    } else {
+                        shoppingLists.push(data);
+                    }
+                    currentListId = listId;
+                    updateShoppingListDisplay(listId);
+                    document.getElementById('shoppingListContainer').style.display = 'block';
+                })
+                .catch(error => console.error('Error loading shopping list:', error));
+        }
+
+
+
+        function updateShoppingListDisplay(listId) {
+            console.log(listId);
+            const list = shoppingLists[listId];
+
+            const items = JSON.parse(list.list_data || '[]');
+            const listContainer = document.getElementById('shoppingListContainer');
+            listContainer.innerHTML = `
+                <h3>${list.title}</h3>
+                <table>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Actions</th>
+                    </tr>
+                    ${items.map(item => `
+                        <tr>
+                            <td>${item.product_title}</td>
+                            <td>$${item.price.toFixed(2)}</td>
+                            <td>
+                                <input type="number" value="${item.quantity}" min="1"
+                                    onchange="updateQuantity('${listId}', '${item.product_id}', this.value)">
+                            </td>
+                            <td>$${(item.price * item.quantity).toFixed(2)}</td>
+                            <td>
+                                <button onclick="removeFromCart('${listId}', '${item.product_id}')">Remove</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </table>
+                <p>Total: $${items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</p>
+                <button onclick="saveShoppingList('${listId}')">Save Shopping List</button>
+            `;
+        }
+
+
+        function updateQuantity(listId, productId, newQuantity) {
+            const listIndex = shoppingLists.findIndex(list => list.id === listId);
+            if (listIndex === -1) return;
+
+            const itemIndex = shoppingLists[listIndex].items.findIndex(item => item.product_id === productId);
+            if (itemIndex !== -1) {
+                shoppingLists[listIndex].items[itemIndex].quantity = Math.max(1, parseInt(newQuantity) || 1);
+                updateShoppingListDisplay(listId);
+            }
+        }
+
+        function removeFromCart(listId, productId) {
+            const listIndex = shoppingLists.findIndex(list => list.id === listId);
+            if (listIndex === -1) return;
+
+            shoppingLists[listIndex].items = shoppingLists[listIndex].items.filter(item => item.product_id !== productId);
+            updateShoppingListDisplay(listId);
+        }
+
+        function saveShoppingList(listId) {
+            const list = shoppingLists.find(l => l.id === listId);
+            if (!list) return;
+
+            fetch('./api/save_shopping_list.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(list)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Shopping list saved successfully!');
+                } else {
+                    console.error('Error saving shopping list:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function deleteShoppingList(listId) {
+            if (confirm('Are you sure you want to delete this shopping list?')) {
+                fetch(`./api/delete_shopping_list.php?id=${listId}`, { method: 'DELETE' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            shoppingLists = shoppingLists.filter(list => list.id !== listId);
+                            if (currentListId === listId) {
+                                currentListId = shoppingLists.length > 0 ? shoppingLists[0].id : null;
+                            }
+                            displayShoppingLists();
+                            updateShoppingListDisplay(currentListId);
+                        } else {
+                            console.error('Error deleting shopping list:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        function searchProducts() {
+            const searchParams = ['Keywords', 'Brand', 'SKU', 'Title', 'Size', 'Weight']
+                .map(param => `${param.toLowerCase()}=${encodeURIComponent(document.getElementById(`search${param}`).value || '')}`)
+                .join('&');
+
+            fetch(`./api/products.php?${searchParams}`)
+                .then(response => response.json())
+                .then(displaySearchResults)
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displaySearchResults(products) {
+            const resultsDiv = document.getElementById('searchResultsContainer');
+            if (products.length === 0) {
+                resultsDiv.innerHTML = '<p>No products found.</p>';
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>SKU</th>
+                        <th>UPC</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Brand</th>
+                        <th>Size</th>
+                        <th>Weight</th>
+                        <th>Keywords</th>
+                        <th>Actions</th>
+                    </tr>
+            `;
+
+            products[0].forEach(productInfo => {
+                let priceChange = '';
+                if (productInfo.old_price) {
+                    const diff = ((productInfo.price - productInfo.old_price) / productInfo.old_price * 100).toFixed(                    2);
+                    const direction = productInfo.price > productInfo.old_price ? 'up' : 'down';
+                    const arrow = direction === 'up' ? '▲' : '▼';
+                    priceChange = `<span class="price-change ${direction}">${arrow} ${Math.abs(diff)}%</span>`;
+                }
+                tableHtml += `
+                    <tr>
+                        <td>${product.product_title}</td>
+                        <td>${productInfo.sku}</td>
+                        <td>${productInfo.upc}</td>
+                        <td>${productInfo.location}</td>
+                        <td>${productInfo.price} ${priceChange}</td>
+                        <td>${productInfo.brand}</td>
+                        <td>${productInfo.size}</td>
+                        <td>${productInfo.weight}</td>
+                        <td>${productInfo.keywords}</td>
+                        <td>
+                            <button onclick="addToCart(${product.product_id}, '${product.product_title.replace("'", "\\'")}', ${productInfo.price})">Add to Cart</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableHtml += '</table>';
+            resultsDiv.innerHTML = tableHtml;
+        }
+
+        function addToCart(productId, productTitle, price) {
+            if (!currentListId) {
+                alert("Please create or select a shopping list first.");
+                return;
+            }
+
+            const listIndex = shoppingLists.findIndex(list => list.id === currentListId);
+            if (listIndex === -1) return;
+
+            const existingItemIndex = shoppingLists[listIndex].items.findIndex(item => item.product_id === productId);
+            if (existingItemIndex !== -1) {
+                shoppingLists[listIndex].items[existingItemIndex].quantity += 1;
+            } else {
+                shoppingLists[listIndex].items.push({
+                    product_id: productId,
+                    product_title: productTitle,
+                    price: parseFloat(price),
+                    quantity: 1
+                });
+            }
+
+            updateShoppingListDisplay(currentListId);
+        }
+
+        function handleShoppingListClick(event) {
+            const listCard = event.target.closest('.shopping-list-card');
+            if (listCard) {
+                const listId = listCard.dataset.listId;
+                loadShoppingList(listId);
+            }
+        }
+
+    </script>
+</body>
+</html>
+

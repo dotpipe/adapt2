@@ -150,6 +150,7 @@ class StoreInventory
                     }
 
                     $nestedOutput[$key]['stores'][] = [
+                        'product_id' => $product['product_id'],
                         'store_id' => $product['store_id'],
                         'sku' => $product['sku'],
                         'upc' => $product['upc'],
@@ -180,12 +181,15 @@ class StoreInventory
     }
 	
     public function searchProducts($filters) {
-	    $sql = "SELECT * FROM inventory WHERE ";
+	    $sql = "SELECT p.*, s.brand, s.location, s.hours
+        FROM inventory p
+        JOIN stores s ON p.store_id = s.id
+        WHERE ";
 	    $params = [];
 	    $and = "";
 	    if (isset($filters['keywords'])) {
 	        $sql .= "keywords LIKE ?";
-		$and = "AND";
+		    $and = "AND";
 	        $params[] = '%' . $filters['keywords'] . '%';
 	    }
 	    if (isset($filters['store_id'])) {
@@ -212,33 +216,61 @@ class StoreInventory
 	        $sql .= "$and weight = ?";
 	        $params[] = $filters['weight'];
 	    }
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($filters);
+        $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Modify the result structure to group by product and include store information
+        $groupedProducts = [];
+        foreach ($products as $product) {
+            $productId = $product['id'];
+            if (!isset($groupedProducts[$productId])) {
+                $groupedProducts[$productId] = [
+                    'product_id' => $productId,
+                    'product_title' => $product['title'],
+                    'sku' => $product['sku'],
+                    'upc' => $product['upc'],
+                    'keywords' => $product['keywords'],
+                    'stores' => []
+                ];
+            }
+            $groupedProducts[$productId]['stores'][] = [
+                'store_id' => $product['store_id'],
+                'brand' => $product['brand'],
+                'location' => $product['location'],
+                'hours' => $product['hours'],
+                'price' => $product['price']
+            ];
+        }
+        
+        return array_values($groupedProducts);
+	    // $stmt = $this->pdo->prepare($sql);
+	    // $stmt->execute($params);
+	    // $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-	    $stmt = $this->pdo->prepare($sql);
-	    $stmt->execute($params);
-	    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	    // $nestedOutput = [];
+	    // foreach ($products as $product) {
+	    //     $key = $product['title'];
+	    //     if (!isset($nestedOutput[$key])) {
+	    //         $nestedOutput[$key] = [
+	    //             'product_title' => $product['title'],
+	    //             'stores' => []
+	    //         ];
+	    //     }
 
-	    $nestedOutput = [];
-	    foreach ($products as $product) {
-	        $key = $product['title'];
-	        if (!isset($nestedOutput[$key])) {
-	            $nestedOutput[$key] = [
-	                'product_title' => $product['title'],
-	                'stores' => []
-	            ];
-	        }
+	    //     $nestedOutput[$key]['stores'][] = [
+	    //         'product_id' => $product['product_id'],
+	    //         'store_id' => $product['store_id'],
+	    //         'sku' => $product['sku'],
+	    //         'upc' => $product['upc'],
+	    //         'price' => $product['price'],
+	    //         'location' => $this->getStoreLocation($product['store_id']) ?? null,
+	    //         'size' => $product['size'],
+	    //         'weight' => $product['weight']
+	    //     ];
+	    // }
 
-	        $nestedOutput[$key]['stores'][] = [
-	            'store_id' => $product['store_id'],
-	            'sku' => $product['sku'],
-	            'upc' => $product['upc'],
-	            'price' => $product['price'],
-	            'location' => $this->getStoreLocation($product['store_id']) ?? null,
-	            'size' => $product['size'],
-	            'weight' => $product['weight']
-	        ];
-	    }
-
-	    return array_values($nestedOutput);
+	    // return array_values($nestedOutput);
 	}
 
 }

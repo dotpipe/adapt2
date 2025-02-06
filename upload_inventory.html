@@ -42,7 +42,7 @@
         });
 
         function submitInventoryData(data) {
-            fetch('/api/inventory_upload.php', {
+            fetch('./api/inventory_upload.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)

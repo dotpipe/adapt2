@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Ads</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .ad-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .ad-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .ad-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .ad-description {
+            margin-bottom: 10px;
+        }
+        .ad-details {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>View Ads</h1>
+        <div id="adContainer" class="ad-grid">
+            <!-- Ads will be dynamically inserted here -->
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchAds();
+        });
+
+        function fetchAds() {
+            fetch('./api/ads.php')
+                .then(response => response.json())
+                .then(ads => {
+                    const adContainer = document.getElementById('adContainer');
+                    ads.forEach(ad => {
+                        const adCard = createAdCard(ad);
+                        adContainer.appendChild(adCard);
+                    });
+                })
+                .catch(error => console.error('Error fetching ads:', error));
+        }
+
+        function createAdCard(ad) {
+            const card = document.createElement('div');
+            card.className = 'ad-card';
+            card.innerHTML = `
+                <div class="ad-title">${ad.title}</div>
+                <div class="ad-description">${ad.description}</div>
+                <div class="ad-details">
+                    <p>Type: ${ad.type}</p>
+                    <p>Start Date: ${ad.start_date}</p>
+                    <p>End Date: ${ad.end_date}</p>
+                </div>
+            `;
+            return card;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Inventory Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        #shoppingListsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .shopping-list {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .shopping-list-search {
+            position: relative;
+            margin-bottom: 20px;
+        }
+    
+        #listSearch {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+        }
+    
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+    
+        .search-results div {
+            padding: 10px;
+            cursor: pointer;
+        }
+    
+        .search-results div:hover {
+            background-color: #f0f0f0;
+        }
+    
+        .current-shopping-list {
+            margin-top: 20px;
+        }
+    </style>
+
+</head>
+
+<body>
+    <h1>Store Inventory Management</h1>
+
+    <div class="shopping-list-search">
+        <input type="text" id="listSearch" placeholder="Search shopping lists...">
+        <div id="listSearchResults" class="search-results"></div>
+    </div>
+    
+    <div id="currentShoppingList" class="current-shopping-list"></div>
+    
+    <div class="section">
+        <h2>Search Products</h2>
+        <input type="text" id="searchKeywords" placeholder="Search by keywords">
+        <input type="text" id="searchStoreID" placeholder="Search by Store ID">
+        <input type="text" id="searchSKU" placeholder="Search by SKU">
+        <input type="text" id="searchTitle" placeholder="Search by title">
+        <input type="text" id="searchSize" placeholder="Search by size">
+        <input type="text" id="searchWeight" placeholder="Search by weight">
+        <button onclick="searchProducts()">Search</button>
+    </div>
+
+    <div class="section">
+        <h2>Search Results</h2>
+        <div id="searchResults"></div>
+    </div>
+
+    <div class="section">
+        <h2>Shopping Lists</h2>
+        <button onclick="createNewShoppingList()">Create New Shopping List</button>
+        <div id="shoppingListsContainer"></div>
+    </div>
+
+    <script>
+        let shoppingLists = [];
+        let currentListId = null;
+        let searchTimeout;
+
+        document.getElementById('listSearch').addEventListener('focus', () => {
+            fetchLatestLists();
+        });
+
+        document.getElementById('listSearch').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                searchLists(e.target.value);
+            }, 300);
+        });
+
+        function fetchLatestLists() {
+            fetch('search_lists.php?action=latest')
+                .then(response => response.json())
+                .then(displayListResults);
+        }
+
+        function searchLists(query) {
+            fetch(`search_lists.php?action=search&query=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(displayListResults);
+        }
+
+        function displayListResults(lists) {
+            const resultsContainer = document.getElementById('listSearchResults');
+            resultsContainer.innerHTML = lists.map(list =>
+                `<div onclick="loadShoppingList(${list.id})">${list.title}</div>`
+            ).join('');
+        }
+
+        function loadShoppingList(listId) {
+            // Existing loadShoppingList function
+            // ...
+        }
+
+        function searchProducts() {
+            const searchParams = ['Keywords', 'StoreID', 'SKU', 'Title', 'Size', 'Weight']
+                .map(param => `${param.toLowerCase()}=${encodeURIComponent(document.getElementById(`search${param}`).value || '')}`)
+                .join('&');
+
+            fetch(`./api/products.php?${searchParams}`)
+                .then(response => response.json())
+                .then(displaySearchResults)
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displaySearchResults(products) {
+            const resultsDiv = document.getElementById('searchResults');
+            if (products.length === 0) {
+                resultsDiv.innerHTML = '<p>No products found.</p>';
+                return;
+            }
+
+            let tableHtml = `
+                <table>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>SKU</th>
+                        <th>UPC</th>
+                        <th>Location</th>
+                        <th>Price</th>
+                        <th>Store ID</th>
+                        <th>Size</th>
+                        <th>Weight</th>
+                        <th>Keywords</th>
+                        <th>Actions</th>
+                    </tr>
+            `;
+
+            products.forEach(product => {
+                console.log(product)
+                let productInfo = product.stores[0];
+                tableHtml += `
+                    <tr>
+                        <td>${productInfo.brand}</td>
+                        <td>${productInfo.title}</td>
+                        <td>${productInfo.sku}</td>
+                        <td>${productInfo.upc}</td>
+                        <td>${productInfo.location}</td>
+                        <td>${productInfo.price}</td>
+                        <td>${productInfo.size}</td>
+                        <td>${productInfo.weight}</td>
+                        <td>${productInfo.keywords}</td>
+                        <td>
+                            <button onclick="addToCart(${product.product_id}, '${product.product_title.replace("'", "\\'")}', ${productInfo.price})">Add to Cart</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableHtml += '</table>';
+
+            resultsDiv.innerHTML = tableHtml;
+        }
+
+        function createNewShoppingList() {
+            const listName = prompt("Enter a name for your new shopping list:", "New Shopping List");
+            if (listName) {
+                const newList = { id: Date.now().toString(), title: listName, items: [] };
+                shoppingLists.push(newList);
+                currentListId = newList.id;
+                displayShoppingLists();
+                updateShoppingListDisplay(newList.id);
+            }
+        }
+
+        function displayShoppingLists() {
+            const container = document.getElementById('shoppingListsContainer');
+            container.innerHTML = shoppingLists.map(list => `
+                <div class="shopping-list ${list.id === currentListId ? 'active' : ''}" 
+                     onclick="switchShoppingList('${list.id}')">
+                    <h3>${list.title}</h3>
+                    <p>Total Items: ${list.items.length}</p>
+                    <button onclick="deleteShoppingList('${list.id}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        function switchShoppingList(listId) {
+            currentListId = listId;
+            displayShoppingLists();
+            updateShoppingListDisplay(listId);
+        }
+
+        function updateShoppingListDisplay(listId) {
+            const list = shoppingLists.find(l => l.id === listId);
+            if (!list) return;
+
+            let container = document.getElementById(`list-${listId}`);
+            if (!container) {
+                container = document.createElement('div');
+                container.id = `list-${listId}`;
+                document.getElementById('shoppingListsContainer').appendChild(container);
+            }
+
+            container.innerHTML = `
+                <h3>${list.title}</h3>
+                <table>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Subtotal</th>
+                        <th>Actions</th>
+                    </tr>
+                    ${list.items.map(item => `
+                        <tr data-product-id="${item.product_id}">
+                            <td>${item.product_title}</td>
+                            <td>$${item.price.toFixed(2)}
+                                <input type="hidden" name="price_${item.product_id}" value="${item.price}">
+                            </td>
+                            <td>
+                                <input type="number" class="item-quantity" value="${item.quantity}" min="1" data-product-id="${item.product_id}">
+                            </td>
+                            <td class="item-subtotal">$${(item.price * item.quantity).toFixed(2)}</td>
+                            <td>
+                                <button onclick="removeFromCart('${listId}', '${item.product_id}')">Remove</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                    <tr>
+                        <td colspan="3"><strong>Total Price:</strong></td>
+                        <td class="total-price"><strong>$${list.items.reduce((total, item) => total + item.price * item.quantity, 0).toFixed(2)}</strong></td>
+                        <td></td>
+                    </tr>
+                </table>
+                <button onclick="saveShoppingList('${listId}')">Save Shopping List</button>
+            `;
+
+            setupShoppingListListeners(listId);
+        }
+
+        function setupShoppingListListeners(listId) {
+            const container = document.getElementById(`list-${listId}`);
+            if (container) {
+                container.addEventListener('input', function (event) {
+                    if (event.target.classList.contains('item-quantity')) {
+                        const productId = event.target.dataset.productId;
+                        const newQuantity = event.target.value;
+                        const priceInput = container.querySelector(`input[name="price_${productId}"]`);
+                        const price = parseFloat(priceInput.value);
+                        const subtotalElement = event.target.parentElement.nextElementSibling;
+                        const subtotal = price * newQuantity;
+                        subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+                        updateTotalPrice(listId);
+                    }
+                });
+            }
+        }
+
+        function updateTotalPrice(listId) {
+            const container = document.getElementById(`list-${listId}`);
+            const subtotals = container.querySelectorAll('.item-subtotal');
+            let totalPrice = 0;
+            subtotals.forEach(subtotal => {
+                totalPrice += parseFloat(subtotal.textContent.replace('$', ''));
+            });
+            const totalElement = container.querySelector('.total-price');
+            if (totalElement) {
+                totalElement.textContent = `$${totalPrice.toFixed(2)}`;
+            }
+        }
+
+        function addToCart(productId, productTitle, price) {
+            if (!currentListId) {
+                alert("Please create or select a shopping list first.");
+                return;
+            }
+
+            const listIndex = shoppingLists.findIndex(list => list.id === currentListId);
+            if (listIndex === -1) return;
+
+            const existingItemIndex = shoppingLists[listIndex].items.findIndex(item => item.product_id === productId);
+            if (existingItemIndex !== -1) {
+                shoppingLists[listIndex].items[existingItemIndex].quantity += 1;
+            } else {
+                shoppingLists[listIndex].items.push({ product_id: productId, product_title: productTitle, price: parseFloat(price), quantity: 1 });
+            }
+
+            updateShoppingListDisplay(currentListId);
+        }
+
+        function removeFromCart(listId, productId) {
+            const listIndex = shoppingLists.findIndex(list => list.id === listId);
+            if (listIndex === -1) return;
+
+            shoppingLists[listIndex].items = shoppingLists[listIndex].items.filter(item => item.product_id !== productId);
+            updateShoppingListDisplay(listId);
+        }
+
+        function saveShoppingList(listId) {
+            const list = shoppingLists.find(l => l.id === listId);
+            if (!list) return;
+
+            fetch('./api/save_shopping_list.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(list)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log('Shopping list saved successfully!');
+                    } else {
+                        console.error('Error saving shopping list:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function deleteShoppingList(listId) {
+            if (confirm('Are you sure you want to delete this shopping list?')) {
+                shoppingLists = shoppingLists.filter(list => list.id !== listId);
+                if (currentListId === listId) {
+                    currentListId = shoppingLists.length > 0 ? shoppingLists[0].id : null;
+                }
+                displayShoppingLists();
+                updateShoppingListDisplay(currentListId);
+            }
+        }
+
+        // Initial setup
+        displayShoppingLists();
+    </script>
+</body>
+
+</html>
